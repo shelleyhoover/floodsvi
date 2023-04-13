@@ -16,9 +16,7 @@ import matplotlib as mpl
 
 #LOAD DATA
 #needs to be shapefile with x & y centroid coordinates 
-
-#Test on Michigan UPDATE THIS TO ACTUAL FILE
-floodsovi = gp.read_file('shapefile/floodsvi_macombmi.shp')
+floodsovi = gp.read_file('shapefile/floodsvi.shp')
 
 
 #Create plot of shapefile and centroids
@@ -63,6 +61,9 @@ print('gwr bandwidth:', gwr_bw)
 gwr_model = GWR(a_coords, ar_y, ar_x, gwr_bw)
 gwr_results = gwr_model.fit()
 
+#Print AICc & R2
+print('GWR AICc =', gwr_results.aicc)
+print('GWR R2 = ', gwr_results.R2)
 
 #Add GWR parameters to GeoDataFrame
 floodsovi['gwr_intercept'] = gwr_results.params[:, 0]
@@ -140,7 +141,16 @@ floodsovi['mgwr_AIAN'] = mgwr_results.params[:, 19]
 #Obtain t-vals filtered based on multiple testing correction
 mgwr_filtered_t = mgwr_results.filter_tvals()
 
-#export to csv
+
+#Print AICc & R2
+print('MGWR AICc =', mgwr_results.aicc)
+print('MGWR R2 = ', mgwr_results.R2)
+
+'''
+#Export Results
+'''
+
+#Parameters and F-test to CSV
 
 #Create dataframes
 df_mgwr_results = pd.DataFrame(mgwr_results.params) #dataframe for parameters
@@ -150,6 +160,28 @@ df_mgwr_results = pd.DataFrame(mgwr_results.params)
 
 mgwr_result = pd.concat([FIPS, df_mgwr_results,df_mgwr_filtered_t], axis=1)
 mgwr_result .to_csv('mgwr_results.csv')
+
+#GWR & MGWR AICc & R2
+
+with open('modelresults.txt', 'a') as f:
+    f.write('GWR AICc' + '\n')
+    f.write(str(gwr_results.aicc) + '\n')
+    f.write('GWR R2' + '\n')
+    f.write(str(gwr_results.R2) + '\n')
+    f.write('GWR Bandwidths' + '\n')
+    f.write(str(gwr_bw) + '\n')
+    f.write('\n')
+    f.write('MGWR AICc' + '\n')
+    f.write(str(mgwr_results.aicc) + '\n')
+    f.write('GWR R2' + '\n')
+    f.write(str(mgwr_results.R2) + '\n')
+    f.write('MGWR Bandwidths' + '\n')
+    f.write(str(mgwr_bw) + '\n')
+    
+'''
+#Compare GWR & MGWR Surfaces
+'''
+
 
 kwargs1 = {'edgecolor': 'black', 'alpha': .65}
 kwargs2 = {'edgecolor': 'black'}
